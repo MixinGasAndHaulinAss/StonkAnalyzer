@@ -10,18 +10,29 @@
     <nav>
         <a href="/">Home</a>
         <a href="/explanation">Explanations</a>
+        <a href="/logout">Logout</a>
     </nav>
     <header>
+        <img src="{{ url_for('static', filename='images/stonklogo.png') }}" alt="Stonk Analyzer Logo" class="logo">
         <h1>Stonk Analyzer</h1>
     </header>
     <main>
         <div class="search-container">
             <input type="text" id="stock-search" placeholder="Enter stock symbol (e.g., AAPL)">
+            <select id="timeframe-select">
+                <option value="3 day">3 Day</option>
+                <option value="1 week">1 Week</option>
+                <option value="1 month" selected>1 Month</option>
+                <option value="6 months">6 Months</option>
+                <option value="1 year">1 Year</option>
+            </select>
             <button id="search-btn">Search</button>
         </div>
         <div id="stock-data-container">
-            </div>
+        </div>
+        <div id="tradingview-chart-container"></div>
     </main>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html> 

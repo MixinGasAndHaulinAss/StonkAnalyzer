@@ -2,44 +2,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchBtn = document.getElementById('search-btn');
     const stockSearch = document.getElementById('stock-search');
     const stockDataContainer = document.getElementById('stock-data-container');
-    const modal = document.getElementById('cowsay-modal');
-    const closeBtn = document.querySelector('.close-btn');
-    const acceptBtn = document.getElementById('accept-btn');
-
-    // Show modal on first visit of the session
-    if (!sessionStorage.getItem('modalShown')) {
-        modal.style.display = 'block';
-        sessionStorage.setItem('modalShown', 'true');
-    }
-
-    // Close modal
-    closeBtn.onclick = function() {
-        modal.style.display = 'none';
-    }
-
-    acceptBtn.onclick = function() {
-        modal.style.display = 'none';
-    }
-
-    window.onclick = function(event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
-        }
-    }
 
     searchBtn.addEventListener('click', () => {
         const symbol = stockSearch.value.toUpperCase();
         const timeframe = document.getElementById('timeframe-select').value;
         if (symbol) {
-            fetch(`/api/stock/${symbol}?timeframe=${timeframe}`)
-                .then(response => response.json())
+            console.log(`Fetching data for ${symbol} with timeframe ${timeframe}`);
+            fetch(`/api/stock/${symbol}?timeframe=${encodeURIComponent(timeframe)}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Received data:', data);
                     displayStockData(data);
                     displayTradingViewChart(symbol, timeframe);
                 })
                 .catch(error => {
                     console.error('Error fetching stock data:', error);
-                    stockDataContainer.innerHTML = `<p>Error fetching stock data. Please try again.</p>`;
+                    stockDataContainer.innerHTML = `<p>Error fetching stock data: ${error.message}. Please check the console for more details.</p>`;
                 });
         }
     });
@@ -78,7 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         new TradingView.widget({
             "width": "100%",
-            "height": "100%",
+            "height": 400,
             "symbol": symbol,
             "interval": interval,
             "timezone": "Etc/UTC",

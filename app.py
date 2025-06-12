@@ -1,25 +1,47 @@
 import os
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, session, redirect, url_for, flash
 from alpha_vantage.techindicators import TechIndicators
 import openai
-from config import ALPHA_VANTAGE_API_KEY, OPENAI_API_KEY
+from config import ALPHA_VANTAGE_API_KEY, OPENAI_API_KEY, SECRET_KEY, PASSWORD
 
 app = Flask(__name__)
+app.secret_key = SECRET_KEY
 
 # Initialize APIs
 ti = TechIndicators(key=ALPHA_VANTAGE_API_KEY, output_format='json')
 openai.api_key = OPENAI_API_KEY
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        if request.form['password'] == PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('index'))
+        else:
+            flash('Wrong password!')
+    return render_template('login.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('login'))
+
 @app.route('/')
 def index():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
     return render_template('index.html')
 
 @app.route('/explanation')
 def explanation():
+    if not session.get('logged_in'):
+        return redirect(url_for('login'))
     return render_template('explanation.html')
 
 @app.route('/api/stock/<symbol>')
 def get_stock_data(symbol):
+    if not session.get('logged_in'):
+        return jsonify({'error': 'Not logged in'}), 401
     try:
         timeframe = request.args.get('timeframe', '1 month')
 
@@ -65,24 +87,44 @@ def get_stock_data(symbol):
             'BBANDS': f"Upper: {float(bbands_upper):.2f}, Middle: {float(bbands_middle):.2f}, Lower: {float(bbands_lower):.2f}"
         }
 
-        # AI Analysis (Commented out to save API tokens)
-        # prompt = f"Provide a detailed investment analysis for {symbol} based on the following technical indicators. "
-        # prompt += "Give a recommendation for both short-term (weeks) and long-term (months to years) investment strategies. "
-        # prompt += "Explain the reasoning behind your recommendations.\\n\\n"
-        # for key, value in technical_analysis.items():
-        #     prompt += f"- {key}: {value}\\n"
+        # AI Analysis
+        technical_analysis_str = ""
+        for key, value in technical_analysis.items():
+            technical_analysis_str += f"- {key}: {value}\\n"
 
-        # response = openai.chat.completions.create(
-        #     model="gpt-3.5-turbo",
-        #     messages=[
-        #         {"role": "system", "content": "You are a financial analyst providing investment advice."},
-        #         {"role": "user", "content": prompt}
-        #     ],
-        #     max_tokens=250,
-        #     temperature=0.7,
-        # )
-        # ai_analysis = response.choices[0].message.content.strip()
-        ai_analysis = "AI analysis is currently disabled."
+        prompt = f"""Analyze the investment potential of {symbol} based on the following technical indicators:
+{technical_analysis_str}
+Please structure your analysis with the following headers, using markdown bold (e.g., **Indicator Breakdown**):
+
+**Indicator Breakdown:**
+- **SMA:** Explain the significance of the current SMA value.
+- **EMA:** Explain the significance of the current EMA value.
+- **MACD:** Explain the significance of the current MACD value.
+- **RSI:** Explain the significance of the current RSI value.
+- **BBANDS:** Explain the significance of the current BBANDS value.
+
+**Overall Analysis:**
+**Short-Term Outlook (weeks):**
+**Long-Term Outlook (months to years):**
+"""
+
+        response = openai.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a financial analyst providing investment advice. Format your response using markdown bold for headers as requested."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=400,
+            temperature=0.7,
+        )
+        ai_analysis = response.choices[0].message.content.strip()
+
+        # Format for HTML
+        parts = ai_analysis.split('**')
+        for i in range(1, len(parts), 2):
+            parts[i] = f'<strong>{parts[i]}</strong>'
+        ai_analysis = "".join(parts)
+        ai_analysis = ai_analysis.replace('\\n', '<br>').replace('\n', '<br>')
 
         data = {
             'symbol': symbol,
