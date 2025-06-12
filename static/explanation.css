@@ -1,0 +1,17 @@
+.term {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.term h2 {
+    margin-top: 0;
+}
+
+.term img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin-top: 1rem;
+} 
