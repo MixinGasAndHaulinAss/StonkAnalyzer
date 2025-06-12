@@ -34,7 +34,24 @@ To get a local copy up and running, follow these simple steps.
     cd StonkAnalyzer
     ```
 
-2.  **Create a configuration file:**
+2.  **Create and activate a virtual environment:**
+    It is highly recommended to use a virtual environment to manage project dependencies.
+
+    -   **Create the environment:**
+        ```sh
+        python -m venv venv
+        ```
+    -   **Activate the environment:**
+        -   On Windows:
+            ```sh
+            .\\venv\\Scripts\\activate
+            ```
+        -   On macOS and Linux:
+            ```sh
+            source venv/bin/activate
+            ```
+
+3.  **Create a configuration file:**
     Create a file named `config.py` in the root directory and add your API keys, a secret key for session management, and a password for the application.
 
     ```python
@@ -45,14 +62,25 @@ To get a local copy up and running, follow these simple steps.
     PASSWORD = "your_password"
     ```
 
-3.  **Install dependencies:**
+4.  **Install dependencies:**
+    Ensure your virtual environment is activated, then run:
     ```sh
     pip install -r requirements.txt
     ```
 
 ## Usage
 
-1.  **Run the application:**
+1.  **Activate your virtual environment (if not already active):**
+    -   On Windows:
+        ```sh
+        .\\venv\\Scripts\\activate
+        ```
+    -   On macOS and Linux:
+        ```sh
+        source venv/bin/activate
+        ```
+
+2.  **Run the application:**
     ```sh
     flask run
     ```
@@ -61,13 +89,13 @@ To get a local copy up and running, follow these simple steps.
     python -m flask run
     ```
 
-2.  **Access the application:**
+3.  **Access the application:**
     Open your web browser and go to `http://127.0.0.1:5000/`.
 
-3.  **Login:**
+4.  **Login:**
     You will be prompted to enter the password you set in the `config.py` file.
 
-4.  **Analyze a stock:**
+5.  **Analyze a stock:**
     -   Enter a stock symbol (e.g., AAPL, GOOGL) into the search bar.
     -   Select your desired timeframe from the dropdown menu.
     -   Click the "Search" button.
